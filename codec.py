@@ -137,7 +137,11 @@ def captcha_solve(driver):
         if 'Introduzca los caracteres de la imagen, por favor.' in text_appear.text:
             try:
                 img_element = driver.find_element(By.XPATH, "//td[@id='j_id23:j_id51-1-0']//img")
-                img_path = 'D:/WEB-CRAWLERS/Scraping_Websites/Census/captcha/captcha.jpg'
+                img_dir = '/home/ec2-user/websitscrape/captcha/'
+                os.makedirs(img_dir, exist_ok=True)
+
+                img_path = os.path.join(img_dir, 'captcha.jpg')
+
                 img_element.screenshot(img_path)
 
                 api_key = os.getenv('APIKEY_2CAPTCHA', '8290cf554382059820ac19d0eb2f5c7a')

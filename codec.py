@@ -21,7 +21,7 @@ chrome_options = Options()
 chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 chrome_options.add_argument("--disable-infobars")
 chrome_options.add_argument("--disable-popup-blocking")
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 
 
 # Initialize the WebDriver using ChromeDriverManager
@@ -31,7 +31,12 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 # Initialize the WebDriver
 driver.get('https://www.abogacia.es/servicios-abogacia/censo-de-letrados/')
 
-time.sleep(10)
+time.sleep(2)
+
+cookies=driver.find_element(By.XPATH,"//a[@id='CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll']")
+cookies.click()
+
+time.sleep(5)
 
 iframe_element = driver.find_element(By.XPATH, '//iframe[contains(@src, "censo.abogacia.es")]')
 driver.switch_to.frame(iframe_element)

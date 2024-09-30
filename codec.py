@@ -30,26 +30,22 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 
 # Initialize the WebDriver
 driver.get('https://www.abogacia.es/servicios-abogacia/censo-de-letrados/')
+print('website open')
 
-time.sleep(2)
-
-cookies=driver.find_element(By.XPATH,"//a[@id='CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll']")
+wait = WebDriverWait(driver, 10)  # Wait up to 10 seconds
+cookies = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[@id='CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll']")))
 cookies.click()
 
-time.sleep(5)
-
-iframe_element = driver.find_element(By.XPATH, '//iframe[contains(@src, "censo.abogacia.es")]')
+iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//iframe[contains(@src, "censo.abogacia.es")]')))
 driver.switch_to.frame(iframe_element)
 
-input_value = driver.find_element(By.XPATH, '//input[@id="j_id23:j_id33"]')
+input_value = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@id="j_id23:j_id33"]')))
 input_value.send_keys('a')
 
-time.sleep(5)
-
-submit_element = driver.find_element(By.XPATH, '//a[contains(text(), "Buscar")]')
+submit_element = wait.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(text(), "Buscar")]')))
 submit_element.click()
 
-time.sleep(10)
+
 print('Website opened and form submitted within iframe')
 
 

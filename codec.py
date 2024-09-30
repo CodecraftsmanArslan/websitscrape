@@ -46,12 +46,12 @@ input_value = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@id=
 input_value.send_keys('a')
 
 
-time.sleep(2)
 # Handle ElementClickInterceptedException
 submit_element = wait.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(text(), "Buscar")]')))
 try:
     submit_element.click()
 except Exception as e:
+    time.sleep(5)
     print(f"Initial click failed: {e}")
     # Scroll into view and click using JavaScript as a workaround
     driver.execute_script("arguments[0].scrollIntoView(true);", submit_element)

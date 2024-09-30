@@ -143,7 +143,7 @@ def solve_captcha(driver):
 i = 0
 while True:
     try:
-        # Locate table and rows
+        time.sleep(5)
         detail_element = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
         )

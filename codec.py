@@ -133,7 +133,7 @@ while True:
         rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")
 
         for page_number in range(len(rows)):
-            time.sleep(2)  # Allow the page to stabilize
+            time.sleep(5)
 
             rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")  # Re-fetch rows
             if page_number < len(rows):

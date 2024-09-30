@@ -135,6 +135,10 @@ while True:
         for page_number in range(len(rows)):
             time.sleep(2)  # Allow the page to stabilize
 
+            detail_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
+                )
+
             rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")  # Re-fetch rows
             if page_number < len(rows):
                 current_row = rows[page_number]

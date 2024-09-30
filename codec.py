@@ -20,7 +20,7 @@ chrome_options = Options()
 chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 chrome_options.add_argument("--disable-infobars")
 chrome_options.add_argument("--disable-popup-blocking")
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 
 # Initialize the WebDriver using ChromeDriverManager
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -78,6 +78,8 @@ def insert_data_mongo(data):
 def extract_information(driver):
     """Extract information from the webpage based on given labels."""
     labels = {
+
+        "first_name":"first_name",
         "Nombre:": "Nombre",
         "Colegio:": "Colegio",
         "Alta Colegiación:": "Alta Colegiación",
@@ -103,10 +105,17 @@ def extract_information(driver):
 def solve_captcha(driver):
     """Handle and solve the captcha if it appears."""
     try:
-        captcha_frame = driver.find_element(By.XPATH, "//iframe[contains(@src, 'ecensofront/html/homeColegiados.iface')]")
-        driver.switch_to.frame(captcha_frame)
+        try:
+            captcha_frame = driver.find_element(By.XPATH, "//iframe[contains(@src, 'ecensofront/html/homeColegiados.iface')]")
+            driver.switch_to.frame(captcha_frame)
+        except:
+            print("Iframe Not Present")
 
-        captcha_prompt = driver.find_element(By.XPATH, "//div[@id='j_id23:CaptchaPopup']//label[contains(text(), 'Introduzca los caracteres de la imagen')]")
+        try:
+
+            captcha_prompt = driver.find_element(By.XPATH, "//div[@id='j_id23:CaptchaPopup']//label[contains(text(), 'Introduzca los caracteres de la imagen')]")
+        except:
+            print('Captcha not present')
         if 'Introduzca los caracteres de la imagen' in captcha_prompt.text:
             img_element = driver.find_element(By.XPATH, "//td[@id='j_id23:j_id51-1-0']//img")
             img_dir = 'captcha/'

@@ -169,7 +169,6 @@ def captcha_solve(driver):
 
 i=0
 while True:
-    # Handling table details
     detail_element = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
     )
@@ -230,6 +229,9 @@ while True:
         except Exception as e:
             print(f"Error processing row {page_number}: {e}")
             continue
+
+        
+    time.sleep(2)
 
     next_page=driver.find_element(By.XPATH,"//img[@id='j_id23:j_id79']")
     next_page.click()

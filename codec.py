@@ -191,13 +191,13 @@ while True:
         try:
             next_page = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//img[@id='j_id23:j_id79']")))
             next_page.click()
-            print(f"Navigated to page {i+1}")
         except Exception as e:
             print(f"Failed to navigate to next page: {e}")
             break
 
         i += 1
         print(f"Navigated to page {i}")
+        time.sleep(5)
 
     except Exception as e:
         print(f"Error on page {i}: {e}")

@@ -10,7 +10,6 @@ from twocaptcha import TwoCaptcha
 from pymongo import MongoClient
 from webdriver_manager.chrome import ChromeDriverManager
 
-
 # MongoDB Connection
 client = MongoClient('localhost', 27017)
 db = client['report_db']
@@ -123,19 +122,23 @@ def solve_captcha(driver):
         return False
 
 
-# Main extraction loop
+# Main extraction loop with retry mechanism for handling stale element exceptions
 i = 0
 while True:
     try:
+        # Locate table and rows
         detail_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
+            EC.visibility_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
         )
         rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")
 
         for page_number in range(len(rows)):
-            time.sleep(5)
+            # Refetch rows to handle stale elements gracefully
+            detail_element = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
+            )
+            rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")
 
-            rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")  # Re-fetch rows
             if page_number < len(rows):
                 current_row = rows[page_number]
                 name_text = current_row.find_element(By.XPATH, ".//span").text.strip()
@@ -144,9 +147,15 @@ while True:
                     print(f"{name_text} already exists in the database, skipping...")
                     continue
 
-                current_row.click()
-                time.sleep(2)  # Allow modal to load
+                # Click on the row to open details modal
+                try:
+                    current_row.click()
+                except Exception as e:
+                    print(f"Error clicking on row: {e}")
+                    continue  # Skip to the next row if clicking fails
 
+                # Extract information and handle data
+                time.sleep(2)  # Allow modal to load
                 info = extract_information(driver)
                 if info:
                     info["first_name"] = name_text
@@ -161,40 +170,16 @@ while True:
                 solve_captcha(driver)
 
         # Click 'Next Page' button
-        next_page = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//img[@id='j_id23:j_id79']")))
-        next_page.click()
+        try:
+            next_page = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//img[@id='j_id23:j_id79']")))
+            next_page.click()
+        except Exception as e:
+            print(f"Failed to navigate to next page: {e}")
+            break
+
         i += 1
         print(f"Navigated to page {i}")
-        
+
     except Exception as e:
         print(f"Error on page {i}: {e}")
         break
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

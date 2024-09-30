@@ -45,6 +45,8 @@ driver.switch_to.frame(iframe_element)
 input_value = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@id="j_id23:j_id33"]')))
 input_value.send_keys('a')
 
+
+time.sleep(2)
 # Handle ElementClickInterceptedException
 submit_element = wait.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(text(), "Buscar")]')))
 try:

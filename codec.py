@@ -227,3 +227,4 @@ while True:
     next_page.click()
     i+=1
     print(f"page_number-{i}")
+    time.sleep(5)

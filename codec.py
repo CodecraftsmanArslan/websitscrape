@@ -67,12 +67,24 @@ def get_existing_names():
 
 existing_names = get_existing_names()
 
-
-def insert_data_mongo(data):
-    """Insert a new entry into MongoDB."""
+def insert_data_mongo(first_name,nombre, colegio, alta_colegiacion, n_colegiado, ejerciente, residente, direccion_profesional, telefono,fax):
     try:
+        data = {
+            "first_name":first_name,
+            "Nombre": nombre,
+            "Colegio": colegio,
+            "Alta_Colegiacion": alta_colegiacion,
+            "N_Colegiado": n_colegiado,
+            "Ejerciente": ejerciente,
+            "Residente": residente,
+            "Direccion_Profesional": direccion_profesional,
+            "Telefono": telefono,
+            "Fax:":fax
+        }
+        # Insert the data into MongoDB
         collection.insert_one(data)
-        print(f"Inserted data for {data['Nombre']} into MongoDB successfully")
+        print("Inserted data into MongoDB successfully")
+
     except Exception as e:
         print(f"Error inserting data: {e}")
 
@@ -104,103 +116,114 @@ def extract_information(driver):
     return result
 
 
-def solve_captcha(driver):
-    """Handle and solve the captcha if it appears."""
+def captcha_solve(driver):
     try:
         try:
-            captcha_frame = driver.find_element(By.XPATH, "//iframe[contains(@src, 'ecensofront/html/homeColegiados.iface')]")
-            driver.switch_to.frame(captcha_frame)
-        except:
-            print("Iframe Not Present")
+            iframe = driver.find_element(By.XPATH, "//iframe[contains(@src, 'ecensofront/html/homeColegiados.iface')]")
+            driver.switch_to.frame(iframe)
+            print("Switched to iframe.")
+        except Exception:
+            print("Iframe not found, proceeding without switching.")
+        
+        time.sleep(3)
 
         try:
+            text_appear = driver.find_element(By.XPATH, "//div[@id='j_id23:CaptchaPopup']//label[contains(text(), 'Introduzca los caracteres de la imagen, por favor.')]")
+            print("Captcha prompt found.")
+        except Exception:
+            print("Captcha prompt not found. No captcha to solve.")
+            return None
+        
+        if 'Introduzca los caracteres de la imagen, por favor.' in text_appear.text:
+            try:
+                img_element = driver.find_element(By.XPATH, "//td[@id='j_id23:j_id51-1-0']//img")
+                img_path = 'D:/WEB-CRAWLERS/Scraping_Websites/Census/captcha/captcha.jpg'
+                img_element.screenshot(img_path)
 
-            captcha_prompt = driver.find_element(By.XPATH, "//div[@id='j_id23:CaptchaPopup']//label[contains(text(), 'Introduzca los caracteres de la imagen')]")
-        except:
-            print('Captcha not present')
-        if 'Introduzca los caracteres de la imagen' in captcha_prompt.text:
-            img_element = driver.find_element(By.XPATH, "//td[@id='j_id23:j_id51-1-0']//img")
-            img_dir = 'captcha/'
-            os.makedirs(img_dir, exist_ok=True)
-            img_path = os.path.join(img_dir, 'captcha.jpg')
-            img_element.screenshot(img_path)
+                api_key = os.getenv('APIKEY_2CAPTCHA', '8290cf554382059820ac19d0eb2f5c7a')
+                solver = TwoCaptcha(api_key)
+                result = solver.normal(img_path)
+                print('Solved captcha:', result)
+                
+                time.sleep(2)
 
-            api_key = os.getenv('APIKEY_2CAPTCHA', '8290cf554382059820ac19d0eb2f5c7a')
-            solver = TwoCaptcha(api_key)
-            captcha_result = solver.normal(img_path)
-            print('Solved captcha:', captcha_result)
+                text_write = driver.find_element(By.XPATH, "//input[@id='j_id23:answer']")
+                text_write.send_keys(result['code'])
 
-            captcha_input = driver.find_element(By.XPATH, "//input[@id='j_id23:answer']")
-            captcha_input.send_keys(captcha_result['code'])
+                submit_element = driver.find_element(By.XPATH, "//a[contains(text(), 'Aceptar')]")
+                submit_element.click()
+                return result['code']
 
-            submit_button = driver.find_element(By.XPATH, "//a[contains(text(), 'Aceptar')]")
-            submit_button.click()
-            return True
+            except Exception as e:
+                print(f"Error occurred while solving captcha: {e}")
+                return None
+
     except Exception as e:
-        print(f"Captcha handling error: {e}")
-        return False
+        print(f"An error occurred: {e}")
 
 
 # Main extraction loop with retry mechanism for handling stale element exceptions
-i = 0
+i=0
 while True:
-    try:
-        detail_element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
-        )
-        rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")
+    # Handling table details
+    detail_element = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
+    )
 
-        for page_number in range(len(rows)):
-            time.sleep(2)  # Allow the page to stabilize
+    rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")
 
-            # Re-fetch rows to handle stale elements gracefully
+    for page_number in range(len(rows)):
+        time.sleep(5)
+        
+        try:
             detail_element = WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
+                EC.presence_of_element_located((By.XPATH, ".//table[@class='iceDatTbl tablaElementos']//tbody"))
             )
             rows = detail_element.find_elements(By.XPATH, ".//td[contains(@style, 'width:140px')]")
-
+            
             if page_number < len(rows):
                 current_row = rows[page_number]
-                name_text = current_row.find_element(By.XPATH, ".//span").text.strip()
+                name_element = current_row.find_element(By.XPATH, ".//span")
+                name_text = name_element.text.strip()
+                print(name_text)
 
                 if name_text in existing_names:
                     print(f"{name_text} already exists in the database, skipping...")
                     continue
 
-                # Click on the row to open details modal
-                try:
-                    current_row.click()
-                except Exception as e:
-                    print(f"Error clicking on row: {e}")
-                    continue  # Skip to the next row if clicking fails
+                name_element.click()
+                time.sleep(5)
 
-                # Extract information and handle data
-                time.sleep(2)  # Allow modal to load
                 info = extract_information(driver)
-                if info:
-                    info["first_name"] = name_text
-                    insert_data_mongo(info)
-
-                # Close modal
+                first_name=name_text
+                nombre = info.get("Nombre", "")
+                colegio = info.get("Colegio", "")
+                alta_colegiacion = info.get("Alta Colegiación", "")
+                n_colegiado = info.get("N. Colegiado", "")
+                ejerciente = info.get("Ejerciente", "")
+                residente = info.get("Residente", "")
+                direccion_profesional = info.get("Dirección Profesional", "")
+                telefono = info.get("Teléfono", None)
+                if telefono == "":
+                    telefono = None
+                fax=info.get("Fax", None)
+                if fax == "":
+                    fax = None
+                
+                insert_data_mongo(first_name,nombre, colegio, alta_colegiacion, n_colegiado, ejerciente, residente, direccion_profesional, telefono,fax)
+                
                 WebDriverWait(driver, 10).until(
                     EC.element_to_be_clickable((By.XPATH, "//a[@id='j_id23:j_id50']"))
                 ).click()
-
-                # Handle captcha if it appears
-                solve_captcha(driver)
-
-        # Click 'Next Page' button
-        try:
-            next_page = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//img[@id='j_id23:j_id79']")))
-            next_page.click()
+                
+                captcha_solve(driver)
+                time.sleep(5)
+    
         except Exception as e:
-            print(f"Failed to navigate to next page: {e}")
-            break
+            print(f"Error processing row {page_number}: {e}")
+            continue
 
-        i += 1
-        print(f"Navigated to page {i}")
-        time.sleep(5)
-
-    except Exception as e:
-        print(f"Error on page {i}: {e}")
-        break
+    next_page=driver.find_element(By.XPATH,"//img[@id='j_id23:j_id79']")
+    next_page.click()
+    i+=1
+    print(f"page_number-{i}")

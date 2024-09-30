@@ -44,7 +44,7 @@ driver.switch_to.frame(iframe_element)
 input_value = driver.find_element(By.XPATH, '//input[@id="j_id23:j_id33"]')
 input_value.send_keys('a')
 
-time.sleep(2)
+time.sleep(5)
 
 submit_element = driver.find_element(By.XPATH, '//a[contains(text(), "Buscar")]')
 submit_element.click()
@@ -230,7 +230,7 @@ while True:
             print(f"Error processing row {page_number}: {e}")
             continue
 
-        
+
     time.sleep(2)
 
     next_page=driver.find_element(By.XPATH,"//img[@id='j_id23:j_id79']")

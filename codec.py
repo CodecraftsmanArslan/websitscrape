@@ -89,8 +89,6 @@ def extract_information(driver):
             pass  # Skip missing elements gracefully
     return result
 
-
-
 for record in names:
     first_name = record['first_name']
     last_name = record.get('last_name', '')  # Get last_name or use an empty string if it's not present

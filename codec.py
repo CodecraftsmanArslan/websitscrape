@@ -32,6 +32,9 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 driver.get('https://www.abogacia.es/servicios-abogacia/censo-de-letrados/')
 print('Website opened')
 
+
+time.sleep(5)
+
 wait = WebDriverWait(driver, 10)
 # Accept cookies if the button appears
 try:

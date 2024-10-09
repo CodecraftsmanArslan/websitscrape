@@ -1,12 +1,15 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-import time
+import time,os
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from pymongo import MongoClient
 from webdriver_manager.chrome import ChromeDriverManager
+from twocaptcha import TwoCaptcha
+from selenium.common.exceptions import NoSuchElementException
+
 
 # MongoDB Connection
 client = MongoClient('localhost', 27017)
@@ -19,7 +22,7 @@ chrome_options = Options()
 chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 chrome_options.add_argument("--disable-infobars")
 chrome_options.add_argument("--disable-popup-blocking")
-chrome_options.add_argument("--headless")  
+# chrome_options.add_argument("--headless")  
 chrome_options.add_argument("--disable-gpu")
 
 # Initialize the WebDriver using ChromeDriverManager
@@ -45,8 +48,84 @@ driver.switch_to.frame(iframe_element)
 names = collection.find({}, {"first_name": 1, "last_name": 1, "_id": 0})  # Fetch first_name and last_name records
 
 
-def insert_data_mongo(nombre, colegio, alta_colegiacion, n_colegiado, ejerciente, residente, direccion_profesional, telefono,fax):
+
+def solve_captcha(driver):
+    while True:  # Start the while loop for continuous CAPTCHA solving
+
+        try:
+            driver.execute_script("window.scrollTo(0, 200);")
+            
+            try:
+                iframe = driver.find_element(By.XPATH, "//iframe[contains(@src, 'ecensofront/html/homeColegiados.iface')]")
+                driver.switch_to.frame(iframe)
+                print("Switched to iframe.")
+            except Exception:
+                print("Iframe not found, proceeding without switching.")
+            
+            time.sleep(5)
+
+            try:
+                text_appear = driver.find_element(By.XPATH, "//div[@id='j_id23:CaptchaPopup']//label[contains(text(), 'Introduzca los caracteres de la imagen, por favor.')]")
+                print("Captcha prompt found.")
+            except Exception:
+                print("Captcha prompt not found. No captcha to solve.")
+                return None
+            
+            if 'Introduzca los caracteres de la imagen, por favor.' in text_appear.text:
+                try:
+                    img_element = driver.find_element(By.XPATH, "//td[@class='icePnlGrdCol1 popupBodyCol1']//img")
+                    img_dir = '/home/ec2-user/websitscrape/captcha/'
+                    os.makedirs(img_dir, exist_ok=True)
+                    img_path = os.path.join(img_dir, 'captcha.jpg')
+                    img_element.screenshot(img_path)
+
+                    # 2Captcha API key and solving the CAPTCHA
+                    api_key = os.getenv('APIKEY_2CAPTCHA', '5d86aab767ee78ecb8014a692c8990ea')
+                    solver = TwoCaptcha(api_key)
+                    result = solver.normal(img_path)
+                    print('Solved captcha:', result)
+                    
+                    time.sleep(2)
+
+                    # Entering the solved CAPTCHA
+                    text_write = driver.find_element(By.XPATH, "//input[@id='j_id23:answer']")
+                    text_write.send_keys(result['code'])
+
+                    submit_element = driver.find_element(By.XPATH, "//a[contains(text(), 'Aceptar')]")
+                    submit_element.click()
+
+                    time.sleep(2)
+
+                    # Switching back to default content and scrolling up
+                    driver.switch_to.default_content()
+                    driver.execute_script("window.scrollTo(0, 0);")
+                    print("Scrolled up successfully.")
+
+                    # Switch back to the iframe to continue
+                    iframe = driver.find_element(By.XPATH, "//iframe[contains(@src, 'ecensofront/html/homeColegiados.iface')]")
+                    driver.switch_to.frame(iframe)
+
+                    time.sleep(2)
+
+
+                    try:
+                        element = driver.find_element(By.XPATH, "//div[@class='icePnlPop corePopup']")
+                        print("Element found.")
+                        # Perform operations if needed
+                    except NoSuchElementException:
+                        print("Element not found. Breaking the loop.")
+                        break  # Exit the loop if the element is not found
+
+                except Exception as e:
+                    print(f"Error occurred while solving captcha: {e}")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+def insert_data_mongo(nombre, colegio, alta_colegiacion, n_colegiado, ejerciente, residente, direccion_profesional, telefono, fax):
     try:
+        
+        # Prepare the data to insert
         data = {
             "Nombre": nombre,
             "Colegio": colegio,
@@ -56,13 +135,15 @@ def insert_data_mongo(nombre, colegio, alta_colegiacion, n_colegiado, ejerciente
             "Residente": residente,
             "Direccion_Profesional": direccion_profesional,
             "Telefono": telefono,
-            "Fax:":fax
+            "Fax": fax
         }
-        collectio_data.insert_one(data)  # Note that we're now inserting into collectio_data
-        print("Inserted data into MongoDB successfully")
+        
+        # Insert the data into MongoDB
+        collectio_data.insert_one(data)
+        print(f"Inserted data for {nombre} into MongoDB successfully")
 
     except Exception as e:
-        print(f"Error inserting data: {e}")
+        print(f"Error inserting data for {nombre}: {e}")
 
 
 def extract_information(driver):
@@ -92,6 +173,14 @@ def extract_information(driver):
 for record in names:
     first_name = record['first_name']
     last_name = record.get('last_name', '')  # Get last_name or use an empty string if it's not present
+
+    existing_record = collectio_data.find_one({"Nombre": f"{first_name} {last_name}"})
+    if existing_record:
+        print(f"Record for {first_name} {last_name} already exists. Skipping.")
+        continue  # Skip the current iteration if the record exists
+
+
+
     
     # Input first name
     input_first_value = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@id="j_id23:j_id33"]')))
@@ -104,14 +193,27 @@ for record in names:
     input_second_value.send_keys(last_name)
 
     print(f'Searching for: {first_name} {last_name}')
+
+
+    time.sleep(5)
+
+
     
     # Submit the form (or click the search button)
     search_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(text(), "Buscar")]')))
     search_button.click()
-    
-    time.sleep(5)  # Wait for results to load before processing the next entry
+
+
+
+    solve_captcha(driver)
+
+    time.sleep(10)  
+
+
+
     name_rows = driver.find_element(By.XPATH, ".//td[contains(@style, 'width:140px')]//span")
     name_rows.click()
+
     time.sleep(5)
 
     info = extract_information(driver)
@@ -134,6 +236,8 @@ for record in names:
     WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//a[@id='j_id23:j_id50']"))
     ).click()
+    
+    solve_captcha(driver)
 
     time.sleep(10)
 

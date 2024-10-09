@@ -8,6 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 from twocaptcha import TwoCaptcha
 from pymongo import MongoClient
+from webdriver_manager.chrome import ChromeDriverManager
+
 
 # MongoDB Connection
 client = MongoClient('localhost', 27017)
@@ -20,12 +22,8 @@ chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 chrome_options.add_argument("--disable-infobars")
 chrome_options.add_argument("--disable-popup-blocking")
 
-# Create a Service object for the Chrome driver
-chrome_driver_path = r'C:\Program Files (x86)\chromedriver.exe'
-service = Service(chrome_driver_path)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-# Initialize the WebDriver
-driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.get('https://www.abogacia.es/servicios-abogacia/censo-de-letrados/')
 
 time.sleep(10)

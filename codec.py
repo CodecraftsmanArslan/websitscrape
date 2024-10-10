@@ -12,7 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 
 
 # MongoDB Connection
-client = MongoClient('mongodb://ec2-18-224-17-226.us-east-2.compute.amazonaws.com:27017')
+client = MongoClient('mongodb://ec2-18-191-101-237.us-east-2.compute.amazonaws.com:27017')
 db = client['report_db']
 collection = db['name_store']
 collectio_data=db['data_db']
@@ -79,7 +79,7 @@ def solve_captcha(driver):
                     img_element = driver.find_element(By.XPATH, "//td[@class='icePnlGrdCol1 popupBodyCol1']//img")
                     img_dir = '/home/ec2-user/websitscrape/captcha/'
                     os.makedirs(img_dir, exist_ok=True)
-                    img_path = os.path.join(img_dir, 'captcha.jpg')
+                    img_path = os.path.join(img_dir, 'captcha.png')
                     img_element.screenshot(img_path)
 
                     # 2Captcha API key and solving the CAPTCHA

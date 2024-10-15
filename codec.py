@@ -212,35 +212,38 @@ for record in names:
 
     time.sleep(10)  
 
+    try:
 
+        name_rows = driver.find_element(By.XPATH, ".//td[contains(@style, 'width:140px')]//span")
+        name_rows.click()
 
-    name_rows = driver.find_element(By.XPATH, ".//td[contains(@style, 'width:140px')]//span")
-    name_rows.click()
+        time.sleep(5)
 
-    time.sleep(5)
+        info = extract_information(driver)
+        nombre = info.get("Nombre", "")
+        colegio = info.get("Colegio", "")
+        alta_colegiacion = info.get("Alta Colegiación", "")
+        n_colegiado = info.get("N. Colegiado", "")
+        ejerciente = info.get("Ejerciente", "")
+        residente = info.get("Residente", "")
+        direccion_profesional = info.get("Dirección Profesional", "")
+        telefono = info.get("Teléfono", None)
+        if telefono == "":
+            telefono = None
+        fax=info.get("Fax", None)
+        if fax == "":
+            fax = None
 
-    info = extract_information(driver)
-    nombre = info.get("Nombre", "")
-    colegio = info.get("Colegio", "")
-    alta_colegiacion = info.get("Alta Colegiación", "")
-    n_colegiado = info.get("N. Colegiado", "")
-    ejerciente = info.get("Ejerciente", "")
-    residente = info.get("Residente", "")
-    direccion_profesional = info.get("Dirección Profesional", "")
-    telefono = info.get("Teléfono", None)
-    if telefono == "":
-        telefono = None
-    fax=info.get("Fax", None)
-    if fax == "":
-        fax = None
+        insert_data_mongo(nombre, colegio, alta_colegiacion, n_colegiado, ejerciente, residente, direccion_profesional, telefono,fax)
 
-    insert_data_mongo(nombre, colegio, alta_colegiacion, n_colegiado, ejerciente, residente, direccion_profesional, telefono,fax)
-
-    WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//a[@id='j_id23:j_id50']"))
-    ).click()
-    
-    solve_captcha(driver)
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//a[@id='j_id23:j_id50']"))
+        ).click()
+        
+        solve_captcha(driver)
+        
+    except:
+        print("Data not exist of these person" )
 
     time.sleep(10)
 

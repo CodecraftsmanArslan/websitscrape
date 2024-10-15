@@ -201,15 +201,13 @@ for record in names:
     time.sleep(5)
 
 
-    
-    # Submit the form (or click the search button)
-    search_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(text(), "Buscar")]')))
-    search_button.click()
-
-
+    try:
+        search_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(text(), "Buscar")]')))
+        search_button.click()
+    except:
+        print("Button not clickable. Trying JavaScript click.")
 
     solve_captcha(driver)
-
     time.sleep(10)  
 
     try:

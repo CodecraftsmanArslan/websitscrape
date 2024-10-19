@@ -12,7 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 
 
 # MongoDB Connection
-client = MongoClient('mongodb://admin:wgiryraT1@ec2-18-117-223-59.us-east-2.compute.amazonaws.com:27017/admin')
+client = MongoClient('mongodb://admin:wgiryraT1@ec2-3-144-207-223.us-east-2.compute.amazonaws.com:27017/admin')
 db = client['report_db']
 collection = db['name_store']
 collectio_data=db['data_db']

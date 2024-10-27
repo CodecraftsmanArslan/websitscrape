@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import time
+import time,os
 from pymongo import MongoClient
 
 
@@ -18,6 +18,7 @@ service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 
+os.environ['DISPLAY'] = ':99'
 
 
 client = MongoClient('mongodb://admin:wgiryraT1@ec2-3-133-7-67.us-east-2.compute.amazonaws.com:27017/admin')

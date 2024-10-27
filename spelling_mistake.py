@@ -23,7 +23,7 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 
 
 client = MongoClient('mongodb://admin:wgiryraT1@ec2-3-133-7-67.us-east-2.compute.amazonaws.com:27017/admin')
-db = client['ForunPoint_db']
+db = client['report_db']
 dish_collection = db['dish_name']
 spelling_error_collection = db['spelling_error']
 

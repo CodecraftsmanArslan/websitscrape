@@ -29,7 +29,7 @@ spelling_error_collection = db['spelling_error']
 
 # Open the URL
 driver.get("https://www.scribbr.com/grammar-checker/")
-time.sleep(5)
+time.sleep(10)
 
 WebDriverWait(driver, 20).until(EC.frame_to_be_available_and_switch_to_it((By.ID, "QuillBotGrmrIframe")))
 input_element = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@contenteditable='true']")))
